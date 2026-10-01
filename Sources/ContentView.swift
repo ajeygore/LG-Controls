@@ -126,14 +126,20 @@ struct ContentView: View {
                         .frame(width: 26, height: 26)
                         .overlay(Circle().strokeBorder(Color(nsColor: .separatorColor).opacity(0.4), lineWidth: 0.5))
                     
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.primary)
-                        .rotationEffect(.degrees(viewModel.isLoading ? 360 : 0))
-                        .animation(viewModel.isLoading ? Animation.linear(duration: 0.8).repeatForever(autoreverses: false) : .default, value: viewModel.isLoading)
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .controlSize(.small)
+                            .scaleEffect(0.65)
+                            .frame(width: 14, height: 14)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.primary)
+                    }
                 }
             }
             .buttonStyle(.plain)
+            .disabled(viewModel.isLoading)
             .help("Refresh hardware values")
         }
     }
