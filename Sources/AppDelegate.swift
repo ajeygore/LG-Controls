@@ -33,7 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupPopover() {
         let pop = NSPopover()
         pop.behavior = .transient
-        pop.animates = true
+        pop.animates = false // Prevent jerky resizing transitions
         
         let contentView = ContentView(
             viewModel: viewModel,
@@ -45,7 +45,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         )
         
-        pop.contentViewController = NSHostingController(rootView: contentView)
+        let hostingController = NSHostingController(rootView: contentView)
+        pop.contentViewController = hostingController
+        pop.contentSize = NSSize(width: 360, height: 490)
         self.popover = pop
     }
     
@@ -69,9 +71,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func showPopover(_ button: NSStatusBarButton) {
         viewModel.loadCurrentValues()
+        
+        if let controller = popover?.contentViewController {
+            let fit = controller.view.fittingSize
+            if fit.width > 0 && fit.height > 0 {
+                popover?.contentSize = fit
+            }
+        }
+        
         popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         
-        // Listen for clicks outside popover
+        if let popWindow = popover?.contentViewController?.view.window {
+            popWindow.makeKey()
+        }
+        
+        // Listen for clicks outside popover to dismiss
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             DispatchQueue.main.async {
                 self?.closePopover(nil)
@@ -92,9 +106,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "LG Monitor Control", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Open Floating Window", action: #selector(openFloatingWindow), keyEquivalent: "o"))
-        menu.addItem(NSMenuItem(title: "Refresh", action: #selector(refreshValues), keyEquivalent: "r"))
+        menu.addItem(NSMenuItem(title: "Refresh Hardware", action: #selector(refreshValues), keyEquivalent: "r"))
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit LG Control", action: #selector(quitApp), keyEquivalent: "q"))
         
         statusItem?.menu = menu
         button.performClick(nil)
@@ -131,7 +145,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 480),
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 490),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false

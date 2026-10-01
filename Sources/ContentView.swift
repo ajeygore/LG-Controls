@@ -5,21 +5,32 @@ struct ContentView: View {
     var onDetachWindow: (() -> Void)?
     var onQuit: (() -> Void)?
     
+    // Theme Colors: Modern Off-White & Black / Graphite
+    static let offWhite = Color(white: 0.95)
+    static let mutedText = Color(white: 0.58)
+    static let cardBackground = Color.white.opacity(0.06)
+    static let cardBorder = Color.white.opacity(0.10)
+    static let trackBackground = Color.white.opacity(0.12)
+    static let pillActiveBg = Color(white: 0.95)
+    static let pillActiveText = Color(white: 0.08)
+    
     var body: some View {
-        VStack(spacing: 16) {
-            // Header: Display Selector & Status
+        VStack(spacing: 14) {
+            // Header: Display Selector, Status & Refresh
             headerView
             
-            Divider()
+            Rectangle()
+                .fill(Self.cardBorder)
+                .frame(height: 1)
+                .padding(.horizontal, 2)
             
             if !viewModel.isConnected {
                 noDisplayView
             } else {
                 // Brightness Control Card
-                ControlCard(
+                ModernControlCard(
                     title: "Brightness",
                     iconName: "sun.max.fill",
-                    accentColor: .orange,
                     value: Binding(
                         get: { viewModel.brightness },
                         set: { viewModel.setBrightnessValue($0) }
@@ -30,10 +41,9 @@ struct ContentView: View {
                 )
                 
                 // Contrast Control Card
-                ControlCard(
+                ModernControlCard(
                     title: "Contrast",
                     iconName: "circle.lefthalf.filled",
-                    accentColor: .teal,
                     value: Binding(
                         get: { viewModel.contrast },
                         set: { viewModel.setContrastValue($0) }
@@ -44,32 +54,49 @@ struct ContentView: View {
                 )
                 
                 // Volume Control Card
-                VolumeControlCard(
-                    viewModel: viewModel
-                )
+                ModernVolumeCard(viewModel: viewModel)
                 
-                Divider()
+                Rectangle()
+                    .fill(Self.cardBorder)
+                    .frame(height: 1)
+                    .padding(.horizontal, 2)
                 
                 // Quick Profiles / Modes
                 profilesSection
             }
             
-            Divider()
+            Rectangle()
+                .fill(Self.cardBorder)
+                .frame(height: 1)
+                .padding(.horizontal, 2)
             
             // Footer: Actions
             footerView
         }
-        .padding(18)
-        .frame(width: 380)
-        .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
+        .padding(.top, 22)
+        .padding(.horizontal, 18)
+        .padding(.bottom, 16)
+        .frame(width: 360)
+        .background(
+            ZStack {
+                Color(white: 0.11)
+                VisualEffectView(material: .popover, blendingMode: .withinWindow)
+            }
+        )
+        .ignoresSafeArea()
     }
     
     // MARK: - Header
     private var headerView: some View {
         HStack(alignment: .center, spacing: 10) {
-            Image(systemName: "display")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.accentColor)
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.08))
+                    .frame(width: 32, height: 32)
+                Image(systemName: "display")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Self.offWhite)
+            }
             
             VStack(alignment: .leading, spacing: 2) {
                 if viewModel.displays.count > 1 {
@@ -87,38 +114,46 @@ struct ContentView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Text(viewModel.selectedDisplay?.name ?? "Select Monitor")
-                                .font(.headline)
-                                .foregroundColor(.primary)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(Self.offWhite)
                             Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(Self.mutedText)
                         }
                     }
                     .menuStyle(.borderlessButton)
                     .fixedSize()
                 } else {
                     Text(viewModel.selectedDisplay?.name ?? "LG Monitor")
-                        .font(.headline)
-                        .foregroundColor(.primary)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Self.offWhite)
                 }
                 
-                HStack(spacing: 6) {
+                HStack(spacing: 5) {
                     Circle()
-                        .fill(viewModel.isConnected ? Color.green : Color.orange)
-                        .frame(width: 7, height: 7)
-                    Text(viewModel.isConnected ? "DDC/CI Connected" : "Connecting...")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .fill(viewModel.isConnected ? Color.green : Color.yellow)
+                        .frame(width: 6, height: 6)
+                    Text(viewModel.isConnected ? "Hardware Connected" : "Connecting...")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(Self.mutedText)
                 }
             }
             
             Spacer()
             
             Button(action: { viewModel.loadCurrentValues() }) {
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 13, weight: .medium))
-                    .rotationEffect(.degrees(viewModel.isLoading ? 360 : 0))
-                    .animation(viewModel.isLoading ? Animation.linear(duration: 1).repeatForever(autoreverses: false) : .default, value: viewModel.isLoading)
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.06))
+                        .frame(width: 28, height: 28)
+                        .overlay(Circle().stroke(Self.cardBorder, lineWidth: 1))
+                    
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Self.offWhite)
+                        .rotationEffect(.degrees(viewModel.isLoading ? 360 : 0))
+                        .animation(viewModel.isLoading ? Animation.linear(duration: 0.8).repeatForever(autoreverses: false) : .default, value: viewModel.isLoading)
+                }
             }
             .buttonStyle(.plain)
             .help("Refresh hardware values")
@@ -127,38 +162,44 @@ struct ContentView: View {
     
     // MARK: - No Display View
     private var noDisplayView: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 32))
-                .foregroundColor(.orange)
+                .font(.system(size: 28, weight: .medium))
+                .foregroundColor(Self.offWhite)
             Text("No Supported External Display")
-                .font(.headline)
-            Text("Please ensure your LG monitor is connected via Thunderbolt, USB-C, or DisplayPort with DDC/CI enabled in monitor settings.")
-                .font(.caption)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(Self.offWhite)
+            Text("Ensure your LG monitor is connected via Thunderbolt or USB-C with DDC/CI enabled in its OSD menu.")
+                .font(.system(size: 11))
                 .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
+                .foregroundColor(Self.mutedText)
+                .padding(.horizontal, 10)
             
             Button("Scan Again") {
                 viewModel.refreshDisplays()
             }
             .buttonStyle(.borderedProminent)
+            .tint(Self.offWhite)
+            .foregroundColor(.black)
+            .font(.system(size: 11, weight: .semibold))
             .padding(.top, 4)
         }
-        .padding(.vertical, 20)
+        .padding(.vertical, 24)
     }
     
     // MARK: - Profiles Section
     private var profilesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("QUICK PROFILES")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundColor(.secondary)
+            Text("PROFILES")
+                .font(.system(size: 9, weight: .bold, design: .rounded))
+                .foregroundColor(Self.mutedText)
+                .tracking(0.8)
             
             HStack(spacing: 8) {
-                ProfileButton(title: "Night", icon: "moon.fill", brightness: 20, contrast: 60, viewModel: viewModel)
-                ProfileButton(title: "Read", icon: "book.fill", brightness: 40, contrast: 65, viewModel: viewModel)
-                ProfileButton(title: "Day", icon: "sun.max.fill", brightness: 75, contrast: 70, viewModel: viewModel)
-                ProfileButton(title: "Cinema", icon: "film.fill", brightness: 100, contrast: 80, viewModel: viewModel)
+                ProfilePill(title: "Night", icon: "moon.fill", brightness: 20, contrast: 60, viewModel: viewModel)
+                ProfilePill(title: "Read", icon: "book.fill", brightness: 40, contrast: 65, viewModel: viewModel)
+                ProfilePill(title: "Day", icon: "sun.max.fill", brightness: 75, contrast: 70, viewModel: viewModel)
+                ProfilePill(title: "Max", icon: "bolt.fill", brightness: 100, contrast: 80, viewModel: viewModel)
             }
         }
     }
@@ -170,12 +211,13 @@ struct ContentView: View {
                 Button(action: onDetachWindow) {
                     HStack(spacing: 4) {
                         Image(systemName: "macwindow.badge.plus")
+                            .font(.system(size: 11))
                         Text("Detach")
+                            .font(.system(size: 11, weight: .medium))
                     }
-                    .font(.caption)
+                    .foregroundColor(Self.mutedText)
                 }
                 .buttonStyle(.plain)
-                .foregroundColor(.secondary)
                 .help("Open as floating window")
             }
             
@@ -184,8 +226,8 @@ struct ContentView: View {
             if let onQuit = onQuit {
                 Button(action: onQuit) {
                     Text("Quit")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(Self.mutedText)
                 }
                 .buttonStyle(.plain)
                 .help("Quit LG Control")
@@ -194,63 +236,66 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Subviews
-
-struct ControlCard: View {
+// MARK: - Modern Control Card
+struct ModernControlCard: View {
     let title: String
     let iconName: String
-    let accentColor: Color
     @Binding var value: Double
     let presets: [Int]
     let onDecrement: () -> Void
     let onIncrement: () -> Void
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
+            // Label and Percentage Badge
             HStack {
-                Label(title, systemImage: iconName)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(accentColor)
+                HStack(spacing: 6) {
+                    Image(systemName: iconName)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(ContentView.offWhite)
+                    Text(title)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(ContentView.offWhite)
+                }
                 
                 Spacer()
                 
                 Text("\(Int(value.rounded()))%")
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                    .foregroundColor(.primary)
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundColor(ContentView.offWhite)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
-                    .background(Color.primary.opacity(0.08))
-                    .cornerRadius(6)
+                    .background(Color.white.opacity(0.08))
+                    .cornerRadius(5)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(ContentView.cardBorder, lineWidth: 1))
             }
             
-            HStack(spacing: 8) {
-                Button(action: onDecrement) {
-                    Image(systemName: "minus")
-                        .font(.system(size: 11, weight: .bold))
-                }
-                .buttonStyle(.borderless)
+            // Slider Row with Steppers
+            HStack(spacing: 10) {
+                StepperButton(icon: "minus", action: onDecrement)
                 
                 Slider(value: $value, in: 0...100, step: 1)
-                    .tint(accentColor)
+                    .tint(ContentView.offWhite)
                 
-                Button(action: onIncrement) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .bold))
-                }
-                .buttonStyle(.borderless)
+                StepperButton(icon: "plus", action: onIncrement)
             }
             
-            // Preset pills
+            // Preset Pills
             HStack(spacing: 6) {
                 ForEach(presets, id: \.self) { p in
+                    let isSelected = Int(value.rounded()) == p
                     Button(action: { value = Double(p) }) {
                         Text("\(p)%")
-                            .font(.system(size: 10, weight: .medium))
-                            .padding(.horizontal, 8)
+                            .font(.system(size: 10, weight: isSelected ? .bold : .medium))
+                            .padding(.horizontal, 9)
                             .padding(.vertical, 3)
-                            .background(Int(value.rounded()) == p ? accentColor.opacity(0.25) : Color.primary.opacity(0.05))
-                            .foregroundColor(Int(value.rounded()) == p ? accentColor : .secondary)
-                            .cornerRadius(4)
+                            .background(isSelected ? ContentView.pillActiveBg : Color.white.opacity(0.05))
+                            .foregroundColor(isSelected ? ContentView.pillActiveText : ContentView.mutedText)
+                            .cornerRadius(5)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .stroke(isSelected ? Color.clear : ContentView.cardBorder, lineWidth: 1)
+                            )
                     }
                     .buttonStyle(.plain)
                 }
@@ -258,12 +303,14 @@ struct ControlCard: View {
             }
         }
         .padding(12)
-        .background(Color.primary.opacity(0.04))
+        .background(ContentView.cardBackground)
         .cornerRadius(10)
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(ContentView.cardBorder, lineWidth: 1))
     }
 }
 
-struct VolumeControlCard: View {
+// MARK: - Modern Volume Card
+struct ModernVolumeCard: View {
     @ObservedObject var viewModel: MonitorViewModel
     
     var volumeIcon: String {
@@ -279,43 +326,53 @@ struct VolumeControlCard: View {
     }
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
+            // Label, Mute Toggle & Percentage Badge
             HStack {
-                Label("Volume", systemImage: volumeIcon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(viewModel.isMuted ? .red : .purple)
+                HStack(spacing: 6) {
+                    Image(systemName: volumeIcon)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(ContentView.offWhite)
+                    Text("Volume")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(ContentView.offWhite)
+                }
                 
                 Spacer()
                 
+                // Mute button
                 Button(action: { viewModel.toggleMute() }) {
                     HStack(spacing: 4) {
                         Image(systemName: viewModel.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                        Text(viewModel.isMuted ? "Muted" : "Mute")
+                            .font(.system(size: 9, weight: .bold))
+                        Text(viewModel.isMuted ? "MUTED" : "MUTE")
+                            .font(.system(size: 10, weight: .bold))
                     }
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(viewModel.isMuted ? .white : .primary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(viewModel.isMuted ? Color.red : Color.primary.opacity(0.08))
-                    .cornerRadius(6)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(viewModel.isMuted ? ContentView.pillActiveBg : Color.white.opacity(0.08))
+                    .foregroundColor(viewModel.isMuted ? ContentView.pillActiveText : ContentView.offWhite)
+                    .cornerRadius(5)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 5)
+                            .stroke(viewModel.isMuted ? Color.clear : ContentView.cardBorder, lineWidth: 1)
+                    )
                 }
                 .buttonStyle(.plain)
                 
                 Text("\(Int(viewModel.volume.rounded()))%")
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                    .foregroundColor(.primary)
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundColor(ContentView.offWhite)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
-                    .background(Color.primary.opacity(0.08))
-                    .cornerRadius(6)
+                    .background(Color.white.opacity(0.08))
+                    .cornerRadius(5)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(ContentView.cardBorder, lineWidth: 1))
             }
             
-            HStack(spacing: 8) {
-                Button(action: { viewModel.adjustVolume(by: -5) }) {
-                    Image(systemName: "minus")
-                        .font(.system(size: 11, weight: .bold))
-                }
-                .buttonStyle(.borderless)
+            // Slider Row with Steppers
+            HStack(spacing: 10) {
+                StepperButton(icon: "minus", action: { viewModel.adjustVolume(by: -5) })
                 
                 Slider(
                     value: Binding(
@@ -325,27 +382,29 @@ struct VolumeControlCard: View {
                     in: 0...100,
                     step: 1
                 )
-                .tint(.purple)
+                .tint(ContentView.offWhite)
                 .disabled(viewModel.isMuted)
+                .opacity(viewModel.isMuted ? 0.4 : 1.0)
                 
-                Button(action: { viewModel.adjustVolume(by: 5) }) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .bold))
-                }
-                .buttonStyle(.borderless)
+                StepperButton(icon: "plus", action: { viewModel.adjustVolume(by: 5) })
             }
             
-            // Preset pills
+            // Preset Pills
             HStack(spacing: 6) {
                 ForEach([0, 25, 50, 75], id: \.self) { p in
+                    let isSelected = Int(viewModel.volume.rounded()) == p
                     Button(action: { viewModel.setVolumeValue(Double(p)) }) {
                         Text("\(p)%")
-                            .font(.system(size: 10, weight: .medium))
-                            .padding(.horizontal, 8)
+                            .font(.system(size: 10, weight: isSelected ? .bold : .medium))
+                            .padding(.horizontal, 9)
                             .padding(.vertical, 3)
-                            .background(Int(viewModel.volume.rounded()) == p ? Color.purple.opacity(0.25) : Color.primary.opacity(0.05))
-                            .foregroundColor(Int(viewModel.volume.rounded()) == p ? Color.purple : .secondary)
-                            .cornerRadius(4)
+                            .background(isSelected ? ContentView.pillActiveBg : Color.white.opacity(0.05))
+                            .foregroundColor(isSelected ? ContentView.pillActiveText : ContentView.mutedText)
+                            .cornerRadius(5)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .stroke(isSelected ? Color.clear : ContentView.cardBorder, lineWidth: 1)
+                            )
                     }
                     .buttonStyle(.plain)
                 }
@@ -353,12 +412,36 @@ struct VolumeControlCard: View {
             }
         }
         .padding(12)
-        .background(Color.primary.opacity(0.04))
+        .background(ContentView.cardBackground)
         .cornerRadius(10)
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(ContentView.cardBorder, lineWidth: 1))
     }
 }
 
-struct ProfileButton: View {
+// MARK: - Stepper Button
+struct StepperButton: View {
+    let icon: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.08))
+                    .frame(width: 22, height: 22)
+                    .overlay(Circle().stroke(ContentView.cardBorder, lineWidth: 1))
+                
+                Image(systemName: icon)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(ContentView.offWhite)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Profile Pill
+struct ProfilePill: View {
     let title: String
     let icon: String
     let brightness: Double
@@ -369,22 +452,24 @@ struct ProfileButton: View {
         Button(action: {
             viewModel.applyProfile(name: title, targetBrightness: brightness, targetContrast: contrast)
         }) {
-            VStack(spacing: 4) {
+            HStack(spacing: 5) {
                 Image(systemName: icon)
-                    .font(.system(size: 14))
+                    .font(.system(size: 10, weight: .semibold))
                 Text(title)
                     .font(.system(size: 11, weight: .medium))
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(Color.primary.opacity(0.06))
-            .cornerRadius(8)
+            .padding(.vertical, 7)
+            .background(Color.white.opacity(0.06))
+            .foregroundColor(ContentView.offWhite)
+            .cornerRadius(6)
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(ContentView.cardBorder, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
 }
 
-// Vibrant background material
+// MARK: - Vibrant background material
 struct VisualEffectView: NSViewRepresentable {
     let material: NSVisualEffectView.Material
     let blendingMode: NSVisualEffectView.BlendingMode
