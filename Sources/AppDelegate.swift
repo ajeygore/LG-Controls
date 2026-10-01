@@ -47,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         
         let hostingController = NSHostingController(rootView: contentView)
         pop.contentViewController = hostingController
-        pop.contentSize = NSSize(width: 360, height: 490)
+        pop.contentSize = NSSize(width: 340, height: 470)
         self.popover = pop
     }
     
@@ -145,7 +145,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 490),
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 470),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
