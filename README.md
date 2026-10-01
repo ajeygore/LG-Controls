@@ -133,16 +133,30 @@ Because this app utilizes the universal **VESA DDC/CI (Monitor Control Command S
 - Apple Silicon Mac (M1, M2, M3, M4 series).
 - Monitor connected via Thunderbolt, USB4, or USB-C (DisplayPort Alt Mode).
 
-### 1. Clone & Build
+### 1. One-Step Automated Setup & Build
+Clone the repo and run the automated setup script, which validates developer tools, compiles the App and CLI, generates the DMG installer, and tests monitor communication:
 ```bash
 git clone https://github.com/ajeygore/LG-Controls.git
 cd LG-Controls
 
-# Compile the app and CLI, and install into /Applications and /opt/homebrew/bin
+# One-step automated check, build, and DMG packaging
+make setup
+```
+
+### 2. Install to Applications & Path
+```bash
+# Installs the app to /Applications and symlinks the CLI to /opt/homebrew/bin
 make install
 ```
 
-### 2. Launch App
+### 3. Build DMG Installer Package
+To build a standalone `.dmg` installer for distribution:
+```bash
+make dmg
+# Generates build/LG-Control.dmg (ready to drag-and-drop into Applications)
+```
+
+### 4. Launch App
 ```bash
 open "/Applications/LG Control.app"
 ```

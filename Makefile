@@ -1,4 +1,4 @@
-.PHONY: all app cli install run clean
+.PHONY: all app cli dmg setup install run clean
 
 all:
 	./Scripts/build.sh
@@ -8,6 +8,12 @@ app:
 
 cli:
 	./Scripts/build.sh
+
+dmg:
+	./Scripts/package_dmg.sh
+
+setup:
+	./Scripts/setup_and_build.sh
 
 install: all
 	@echo "📲 Installing to /Applications..."
