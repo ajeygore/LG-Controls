@@ -19,6 +19,8 @@ install: all
 	@echo "📲 Installing to /Applications..."
 	@rm -rf "/Applications/LG Control.app"
 	@cp -R "build/LG Control.app" "/Applications/LG Control.app"
+	@xattr -cr "/Applications/LG Control.app"
+	@codesign --force --deep --sign - "/Applications/LG Control.app"
 	@echo "🔗 Setting up CLI symlink..."
 	@if [ -d "/opt/homebrew/bin" ]; then \
 		ln -sf "$$(pwd)/bin/lg-control" "/opt/homebrew/bin/lg-control"; \

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var viewModel: MonitorViewModel
+    @ObservedObject var mediaKeys = MediaKeyController.shared
     var onDetachWindow: (() -> Void)?
     var onQuit: (() -> Void)?
     
@@ -205,29 +206,32 @@ struct ContentView: View {
             
             Spacer()
             
-            if MediaKeyController.isAccessibilityTrusted() {
-                HStack(spacing: 4) {
+            if mediaKeys.isTrusted {
+                HStack(spacing: 5) {
                     Image(systemName: "keyboard")
                         .font(.system(size: 10))
                     Text("F1/F2: Mouse Screen")
                         .font(.system(size: 10, weight: .regular))
+                    Circle()
+                        .fill(Color.green.opacity(0.8))
+                        .frame(width: 5, height: 5)
                 }
                 .foregroundColor(.secondary)
-                .help("Pressing brightness keys (F1/F2) adjusts whichever monitor your mouse is hovering over")
+                .help("Brightness keys (F1/F2) adjust whichever monitor your mouse is hovering over")
             } else {
                 Button(action: {
-                    MediaKeyController.requestAccessibilityPermission()
+                    MediaKeyController.openAccessibilitySettings()
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "exclamationmark.triangle")
+                        Image(systemName: "exclamationmark.triangle.fill")
                             .font(.system(size: 10))
                         Text("Enable F1/F2 Keys")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 10, weight: .semibold))
                     }
                     .foregroundColor(.orange)
                 }
                 .buttonStyle(.plain)
-                .help("Grant Accessibility permission in System Settings to control brightness with F1/F2")
+                .help("Click to open System Settings > Privacy & Security > Accessibility and enable LG Control")
             }
             
             Spacer()
