@@ -204,11 +204,11 @@ final class MediaKeyController: ObservableObject {
                 isBrightnessUp = true
             case 145, 107, 122: // Brightness Down (Media key 145, F14 107, F1 122)
                 isBrightnessDown = true
-            case 111, 19: // Sound Up (F12 111)
+            case 111: // Sound Up (F12)
                 isVolumeUp = true
-            case 103, 18: // Sound Down (F11 103)
+            case 103: // Sound Down (F11)
                 isVolumeDown = true
-            case 109, 20: // Mute (F10 109)
+            case 109: // Mute (F10)
                 isMute = true
             default:
                 return Unmanaged.passUnretained(event)
@@ -224,17 +224,31 @@ final class MediaKeyController: ObservableObject {
         // Find which screen currently contains the mouse pointer
         let mouseLoc = NSEvent.mouseLocation
         let screens = NSScreen.screens
-        guard let activeScreen = screens.first(where: { NSMouseInRect(mouseLoc, $0.frame, false) }) ?? NSScreen.main else {
+        guard let mouseScreen = screens.first(where: { NSMouseInRect(mouseLoc, $0.frame, false) }) ?? NSScreen.main else {
             return Unmanaged.passUnretained(event)
         }
         
-        let screenNumber = activeScreen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID ?? 0
-        
-        // Check if the screen with mouse is an external display supported by DDC manager
         let allDisplays = DDCManager.shared().getDisplays()
-        guard let targetDisplay = allDisplays.first(where: { $0.displayID == screenNumber && $0.isExternal }) else {
-            // Mouse is on built-in screen or non-DDC screen: let macOS handle it natively!
-            return Unmanaged.passUnretained(event)
+        let mouseDisplay = allDisplays.first(where: { $0.displayID == Self.displayID(of: mouseScreen) && $0.isExternal })
+        
+        let activeScreen: NSScreen
+        let targetDisplay: DDCDisplay
+        if isVolumeUp || isVolumeDown || isMute {
+            // Volume follows the active sound output, not the cursor. Only drive DDC volume
+            // when sound is playing through a monitor; otherwise let macOS handle it natively
+            // (built-in speakers, wired/Bluetooth headphones, AirPlay, ...).
+            guard let audioDisplay = AudioOutput.outputDisplay(among: allDisplays, fallback: mouseDisplay) else {
+                return Unmanaged.passUnretained(event)
+            }
+            targetDisplay = audioDisplay
+            activeScreen = screens.first(where: { Self.displayID(of: $0) == audioDisplay.displayID }) ?? mouseScreen
+        } else {
+            // Brightness follows the cursor. Built-in or non-DDC screen: let macOS handle it natively!
+            guard let mouseDisplay = mouseDisplay else {
+                return Unmanaged.passUnretained(event)
+            }
+            targetDisplay = mouseDisplay
+            activeScreen = mouseScreen
         }
         
         // If it's a key release (up), consume it so macOS doesn't get confused
@@ -265,6 +279,10 @@ final class MediaKeyController: ObservableObject {
         }
         
         return Unmanaged.passUnretained(event)
+    }
+    
+    private static func displayID(of screen: NSScreen) -> CGDirectDisplayID {
+        return screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID ?? 0
     }
     
     private func handleBrightnessChange(on screen: NSScreen, display: DDCDisplay, delta: Double) {

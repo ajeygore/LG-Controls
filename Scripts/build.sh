@@ -46,6 +46,7 @@ swiftc -O \
     Sources/ContentView.swift \
     Sources/OSDController.swift \
     Sources/MediaKeyController.swift \
+    Sources/AudioOutput.swift \
     Sources/AppDelegate.swift \
     Sources/main.swift \
     "$BUILD_DIR/objs/i2c.o" \
@@ -57,6 +58,7 @@ swiftc -O \
     -framework AppKit \
     -framework SwiftUI \
     -framework Combine \
+    -framework CoreAudio \
     -o "$APP_BUNDLE/Contents/MacOS/LGControl"
 
 cp Resources/Info.plist "$APP_BUNDLE/Contents/Info.plist"
