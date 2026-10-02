@@ -24,10 +24,10 @@ final class MediaKeyController: ObservableObject {
         self.isTrusted = Self.isAccessibilityTrusted()
         
         if self.isTrusted {
+            NSLog("[LGControl] Accessibility is trusted at launch. Setting up event tap.")
             setupEventTap()
         } else {
-            // Prompt system accessibility dialog
-            Self.requestAccessibilityPermission()
+            NSLog("[LGControl] Accessibility not yet trusted at launch. Silently polling in background.")
             startPermissionPolling()
         }
     }
@@ -100,25 +100,38 @@ final class MediaKeyController: ObservableObject {
             return controller.handleEvent(proxy: proxy, type: type, event: event)
         }
         
-        // Use .cgSessionEventTap so NX_SYSDEFINED and session-level keydowns are delivered
-        guard let tap = CGEvent.tapCreate(
+        var tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: mask,
             callback: callback,
             userInfo: selfPtr
-        ) else {
-            print("❌ Failed to create CGEvent tap for media keys")
+        )
+        
+        if tap == nil {
+            NSLog("[LGControl] .cgSessionEventTap unavailable, falling back to .cghidEventTap...")
+            tap = CGEvent.tapCreate(
+                tap: .cghidEventTap,
+                place: .headInsertEventTap,
+                options: .defaultTap,
+                eventsOfInterest: mask,
+                callback: callback,
+                userInfo: selfPtr
+            )
+        }
+        
+        guard let finalTap = tap else {
+            NSLog("[LGControl] ❌ Failed to create CGEvent tap for media keys")
             return
         }
         
-        guard let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0) else {
-            print("❌ Failed to create run loop source for media keys")
+        guard let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, finalTap, 0) else {
+            NSLog("[LGControl] ❌ Failed to create run loop source for media keys")
             return
         }
         
-        self.eventTap = tap
+        self.eventTap = finalTap
         self.runLoopSource = source
         
         // Run event tap on dedicated user-interactive queue to prevent UI stalls
@@ -126,12 +139,12 @@ final class MediaKeyController: ObservableObject {
             guard let self = self else { return }
             self.tapRunLoop = CFRunLoopGetCurrent()
             CFRunLoopAddSource(self.tapRunLoop, source, .commonModes)
-            CGEvent.tapEnable(tap: tap, enable: true)
+            CGEvent.tapEnable(tap: finalTap, enable: true)
             
             Task { @MainActor [weak self] in
                 self?.isEnabled = true
                 self?.isTrusted = true
-                print("✅ MediaKeyController active: listening for brightness keys on mouse display")
+                NSLog("[LGControl] ✅ MediaKeyController active: listening for brightness keys on mouse display")
             }
             
             CFRunLoopRun()

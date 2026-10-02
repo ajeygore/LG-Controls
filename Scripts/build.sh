@@ -64,9 +64,9 @@ if [ -f Resources/AppIcon.icns ]; then
     cp Resources/AppIcon.icns "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 fi
 
-# Clean extended attributes and ad-hoc codesign the bundle for TCC / Accessibility support
+# Clean extended attributes and sign with stable designated requirement for TCC / Accessibility
 xattr -cr "$APP_BUNDLE"
-codesign --force --deep --sign - "$APP_BUNDLE"
+codesign --force --deep -s - -r='designated => identifier "com.user.LGControl"' "$APP_BUNDLE"
 
 echo "✅ Built and signed App Bundle at $APP_BUNDLE"
 

@@ -24,5 +24,7 @@
     <true/>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>NSAccessibilityUsageDescription</key>
+    <string>LG Control uses Accessibility to listen for keyboard brightness and volume keys.</string>
 </dict>
 </plist>
