@@ -12,6 +12,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
         setupPopover()
+        setupMediaKeys()
+    }
+    
+    private func setupMediaKeys() {
+        MediaKeyController.shared.start(with: viewModel)
     }
     
     private func setupStatusItem() {

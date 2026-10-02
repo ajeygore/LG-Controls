@@ -44,6 +44,8 @@ swiftc -O \
     -import-objc-header DDC/DDCBridge.h \
     Sources/MonitorViewModel.swift \
     Sources/ContentView.swift \
+    Sources/OSDController.swift \
+    Sources/MediaKeyController.swift \
     Sources/AppDelegate.swift \
     Sources/main.swift \
     "$BUILD_DIR/objs/i2c.o" \

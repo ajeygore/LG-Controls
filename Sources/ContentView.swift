@@ -205,6 +205,33 @@ struct ContentView: View {
             
             Spacer()
             
+            if MediaKeyController.isAccessibilityTrusted() {
+                HStack(spacing: 4) {
+                    Image(systemName: "keyboard")
+                        .font(.system(size: 10))
+                    Text("F1/F2: Mouse Screen")
+                        .font(.system(size: 10, weight: .regular))
+                }
+                .foregroundColor(.secondary)
+                .help("Pressing brightness keys (F1/F2) adjusts whichever monitor your mouse is hovering over")
+            } else {
+                Button(action: {
+                    MediaKeyController.requestAccessibilityPermission()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 10))
+                        Text("Enable F1/F2 Keys")
+                            .font(.system(size: 10, weight: .medium))
+                    }
+                    .foregroundColor(.orange)
+                }
+                .buttonStyle(.plain)
+                .help("Grant Accessibility permission in System Settings to control brightness with F1/F2")
+            }
+            
+            Spacer()
+            
             if let onQuit = onQuit {
                 Button(action: onQuit) {
                     Text("Quit")

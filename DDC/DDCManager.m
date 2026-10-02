@@ -41,6 +41,7 @@
     for (int i = 0; i < _displayCount; i++) {
         DDCDisplay *d = [[DDCDisplay alloc] init];
         d.index = i + 1;
+        d.displayID = _displays[i].id;
         d.name = _displays[i].productName ?: @"Unknown Display";
         d.uuid = _displays[i].uuid ?: @"";
         d.serial = _displays[i].alphNumSerial ?: @"";

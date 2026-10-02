@@ -4,6 +4,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface DDCDisplay : NSObject
 @property (nonatomic, assign) NSInteger index;
+@property (nonatomic, assign) uint32_t displayID;
 @property (nonatomic, copy) NSString *name;
 @property (nonatomic, copy) NSString *uuid;
 @property (nonatomic, copy) NSString *serial;

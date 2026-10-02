@@ -42,6 +42,11 @@ LG's official **OnScreen Control (OSC)** software is notorious for issues on App
     - 📖 **Read**: 40% Brightness / 65% Contrast
     - ☀️ **Day**: 75% Brightness / 70% Contrast
     - ⚡ **Max**: 100% Brightness / 80% Contrast
+- ⌨️ **Keyboard Brightness & Volume Keys (F1 / F2 / F10 / F11 / F12)**:
+  - **Mouse-Aware Targeting**: Adjusts whichever display your mouse cursor is currently resting on!
+  - **Seamless Native Coexistence**: If your mouse is on your MacBook's built-in Retina screen, macOS handles brightness natively; move your mouse over your external monitor, and pressing F1/F2 automatically dims or brightens that display via DDC/CI.
+  - **Shift + Option Fine Adjustments**: Supports granular 1.25% quarter-step adjustments.
+  - **Apple-Style HUD Overlay**: Shows a translucent floating On-Screen Display (OSD) bezel with monitor name, icon, and level bar on the active display.
 - 🧵 **Hardware Throttling / Debouncing**: Hardware writes over DDC/CI I2C are smoothly throttled to ensure responsive, lag-free slider movement without bus congestion.
 - 💻 **CLI Companion Tool (`lg-control`)**: Control your monitor directly from Terminal, Raycast, Alfred, or Apple Shortcuts.
 
